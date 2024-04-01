@@ -1,0 +1,37 @@
+{
+    "name": "ICU4XCollator",
+    "input": {
+        "options": {
+            "strength": {
+                "name": "ICU4XCollatorStrength",
+                "type": "enum",
+                "allowedValues": [
+                    "AUTO"
+                ]
+            },
+            "alternate_handling": {
+                "name": "ICU4XCollatorAlternateHandling",
+                "type": "enum",
+                "allowedValues": [
+                    "AUTO"
+                ]
+            }
+        }
+    },
+    "methods": {
+        "compare": {
+            "description": "Compares two strings according to the collator's rules",
+            "args": [
+                {
+                    "name": "str1",
+                    "type": "string"
+                },
+                {
+                    "name": "str2",
+                    "type": "string"
+                }
+            ],
+            "returnType": "number"
+        }
+    }
+}
