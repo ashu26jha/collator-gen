@@ -2,36 +2,44 @@
     "name": "ICU4XCollator",
     "input": {
         "options": {
+            "type": "object",
             "strength": {
-                "name": "ICU4XCollatorStrength",
+                "typeName": "ICU4XCollatorStrength",
                 "type": "enum",
                 "allowedValues": [
                     "AUTO"
                 ]
             },
             "alternate_handling": {
-                "name": "ICU4XCollatorAlternateHandling",
+                "typeName": "ICU4XCollatorAlternateHandling",
                 "type": "enum",
                 "allowedValues": [
                     "AUTO"
                 ]
             }
+        },
+        "str1": {
+            "type": "string"
+        },
+        "str2": {
+            "type": "string"
         }
     },
     "methods": {
-        "compare": {
-            "description": "Compares two strings according to the collator's rules",
+        "initialize": {
+            "name": "create_v1",
             "args": [
                 {
-                    "name": "str1",
-                    "type": "string"
+                    "name": "dataProvider"
                 },
                 {
-                    "name": "str2",
-                    "type": "string"
+                    "name": "locale"
+                },
+                {
+                    "name": "options"
                 }
             ],
-            "returnType": "number"
+            "returnType": "ICU4XCollator"
         }
     }
 }
