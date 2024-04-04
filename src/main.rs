@@ -1,104 +1,55 @@
 use serde_json::Value;
+use std::fs;
 
 fn main() {
-    let json_data = r#"
-    {
-        "name": "ICU4XCollator",
-        "input": {
-            "options": {
-                "type": "object",
-                "strength": {
-                    "typeName": "ICU4XCollatorStrength",
-                    "type": "enum",
-                    "allowedValues": [
-                        "AUTO"
-                    ]
-                },
-                "alternate_handling": {
-                    "typeName": "ICU4XCollatorAlternateHandling",
-                    "type": "enum",
-                    "allowedValues": [
-                        "AUTO"
-                    ]
-                }
-            },
-            "str1": {
-                "type": "string"
-            },
-            "str2": {
-                "type": "string"
-            }
-        },
-        "methods": {
-            "initialize": {
-                "name": "create_v1",
-                "args": [
-                    {
-                        "name": "dataProvider"
-                    },
-                    {
-                        "name": "locale"
-                    },
-                    {
-                        "name": "options"
-                    }
-                ],
-                "returnType": "ICU4XCollator"
-            }
-        }
-    }
-    "#;
+    let file_path = "hello.json";
 
-    let data: Value = serde_json::from_str(json_data).unwrap();
-    let x = "Auto"; // We have Auto enum for the demo purposes
+    let json_data = fs::read_to_string(file_path)
+        .expect(&format!("Unable to read file {}", file_path));
 
+    let data: Value = serde_json::from_str(&json_data)
+        .expect("Unable to parse JSON");
+    let x = "AUTO"; // For sake of simplicity
     let mut ts_code = String::new();
 
-    
-    
-    let options = &data["input"]["options"];
+    if let Some(options_map) = data["input"]["options"].as_object() {
+        ts_code.push_str(&format!("this.{}_options = {{\n", 
+            data["name"].as_str().unwrap_or_default().to_lowercase()));
 
-    if let Value::Object(options_map) = options {
-
-        ts_code.push_str(&format!(
-            "this.#{}options = {{ \n",
-            data["name"].as_str().unwrap_or_default()
-        ));
-
-        for (option_name, option_value) in options_map.iter() {
+        for (option_name, option_value) in options_map {
             if let Some(type_name_str) = option_value["typeName"].as_str() {
                 let allowed_value = option_value["allowedValues"]
                     .as_array()
                     .and_then(|arr| arr.iter().find(|v| v.as_str() == Some(x)))
                     .and_then(|v| v.as_str())
-                    .unwrap_or_else(|| x); 
+                    .unwrap_or(x);
 
-                ts_code.push_str(&format!(" \t {}: {}.{};\n", option_name, type_name_str, allowed_value));
+                ts_code.push_str(&format!("  {}: {}.{};\n", 
+                    option_name, type_name_str, allowed_value));
             }
         }
         ts_code.push_str("};\n");
     }
 
-    let initialize = &data["methods"]["initialize"];
-    let return_type = initialize["returnType"].as_str().unwrap_or_default();
-    let name = initialize["name"].as_str().unwrap_or_default();
-    ts_code.push_str(&format!("this.#{} = result (() => {}.{} ( \n", return_type, return_type, name));
+    if let Some(initialize) = data["methods"]["initialize"].as_object() {
+        let return_type = initialize["returnType"].as_str().unwrap_or_default();
+        let name = initialize["name"].as_str().unwrap_or_default();
 
-    if let Value::Array(args_array) = &initialize["args"] {
-        for (index, arg) in args_array.iter().enumerate() {
-            let arg_name = arg["name"].as_str().unwrap_or_default();
-    
-            if arg_name == "locale" {
-                ts_code.push_str(&format!("\tunwrap(this.#{})", arg_name)); 
-            } else {
-                ts_code.push_str(&format!("\tthis.#{}", arg_name)); 
+        ts_code.push_str(&format!("this.{}_ = (() => {{ return {}.{}(\n", 
+            return_type.to_lowercase(), return_type, name));
+
+        if let Some(args_array) = initialize["args"].as_array() {
+            for (index, arg) in args_array.iter().enumerate() {
+                let arg_name = arg["name"].as_str().unwrap_or_default();
+
+                ts_code.push_str(&format!("  this.{}", arg_name));
+                if index < args_array.len() - 1 {
+                    ts_code.push_str(",\n");
+                }
             }
-    
-            if index < args_array.len() - 1 { 
-                ts_code.push_str(",\n");
-            }
+            ts_code.push_str("\n});\n");
         }
-        ts_code.push_str("\n));\n"); 
     }
+
     println!("{}", ts_code);
 }
